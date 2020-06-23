@@ -24,7 +24,7 @@
 #####    VARIABLES    ####
 ##########################
 SCRIPT=`basename ${BASH_SOURCE[0]}` #Script File Name
-GUACA_VER="0.9.9"
+GUACA_VER="1.1.0"
 MYSQL_CONNECTOR_VER="5.1.39"
 LIBJPEG_VER="1.4.2"
 SCRIPT_BUILD="5"
@@ -41,7 +41,7 @@ MYSQL_CONNECTOR="mysql-connector-java-${MYSQL_CONNECTOR_VER}"
 MYSQL_PORT="3306"
 GUACA_PORT="4822"
 GUACA_CONF="guacamole.properties"
-GUACA_URL="http://sourceforge.net/projects/guacamole/files/current/"
+GUACA_URL="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACA_VER}/"
 GUACA_SERVER="guacamole-server-${GUACA_VER}" #Source
 #GUACA_CLIENT="guacamole-client-${GUACA_VER}" #Source
 GUACA_CLIENT="guacamole-${GUACA_VER}" #Binary
@@ -287,13 +287,13 @@ mkdir -vp ${LIB_DIR}{extensions,lib} >> $logfile  2>&1
 mkdir -v /usr/share/tomcat/.guacamole/ >> $logfile  2>&1
 
 sleep 1 | echo -e "\nDownloading Guacamole packages for installation...\n" | pv -qL 25; echo -e "\nDownloading Guacamole packages for installation...\n" >> $logfile  2>&1
-wget --progress=bar:force ${GUACA_URL}source/${GUACA_SERVER}.tar.gz 2>&1 | progressfilt
+wget --progress=bar:force ${GUACA_URL}source/${GUACA_SERVER}.tar.gz -O ${GUACA_SERVER}.tar.gz 2>&1 | progressfilt
 #wget --progress=bar:force ${GUACA_URL}source/${GUACA_CLIENT}.tar.gz 2>&1 | progressfilt
 wget --progress=bar:force ${GUACA_URL}binary/${GUACA_CLIENT}.war -O ${INSTALL_DIR}client/guacamole.war 2>&1 | progressfilt
-wget --progress=bar:force ${GUACA_URL}extensions/${GUACA_JDBC}.tar.gz 2>&1 | progressfilt
+wget --progress=bar:force ${GUACA_URL}binary/${GUACA_JDBC}.tar.gz -O ${GUACA_JDBC}.tar.gz 2>&1 | progressfilt
 wget --progress=bar:force ${MYSQ_CONNECTOR_URL}${MYSQL_CONNECTOR}.tar.gz 2>&1 | progressfilt
 
-sleep 1 | echo -e "\nDerompessing Guacamole Server Source...\n" | pv -qL 25; echo -e "\nDerompessing Guacamole Server Source...\n" >> $logfile  2>&1
+sleep 1 | echo -e "\nDecompressing Guacamole Server Source...\n" | pv -qL 25; echo -e "\nDecompressing Guacamole Server Source...\n" >> $logfile  2>&1
 pv ${GUACA_SERVER}.tar.gz | tar xzf - && rm -f ${GUACA_SERVER}.tar.gz
 mv ${GUACA_SERVER} server
 
@@ -308,7 +308,7 @@ mv ${GUACA_JDBC} extension
 sleep 1 | echo -e "\nDecompressing MySQL Connector...\n" | pv -qL 25; echo -e "\nDecompressing MySQL Connector...\n" >> $logfile  2>&1
 pv ${MYSQL_CONNECTOR}.tar.gz | tar xzf - && rm -f ${MYSQL_CONNECTOR}.tar.gz
 
-sleep 1 | echo -e "\nCompiling Gucamole Server...\n" | pv -qL 25; echo -e "\nCompiling Gucamole Server...\n" >> $logfile  2>&1
+sleep 1 | echo -e "\nCompiling Guacamole Server...\n" | pv -qL 25; echo -e "\nCompiling Guacamole Server...\n" >> $logfile  2>&1
 cd server
 ./configure --with-init-dir=/etc/init.d
 make
@@ -316,17 +316,17 @@ sleep 1 && make install
 sleep 1 && ldconfig
 cd ..
 
-# sleep 1 | echo -e "\nCompiling Gucamole Client...\n" | pv -qL 25
+# sleep 1 | echo -e "\nCompiling Guacamole Client...\n" | pv -qL 25
 # cd client
 # mvn package
 # cp guacamole/doc/example/guacamole.properties /etc/guacamole/
 # cp guacamole/doc/example/user-mapping.xml /etc/guacamole/
 
-sleep 1 | echo -e "\nCopying Gucamole Client...\n" | pv -qL 25; echo -e "\nCopying Gucamole Client...\n" >> $logfile  2>&1
+sleep 1 | echo -e "\nCopying Guacamole Client...\n" | pv -qL 25; echo -e "\nCopying Guacamole Client...\n" >> $logfile  2>&1
 cp -v client/guacamole.war ${LIB_DIR}guacamole.war
 #cp -v client/guacamole.war /var/lib/tomcat/webapps/guacamole.war
 
-sleep 1 | echo -e "\nMaking Guacamole configurtion files...\n" | pv -qL 25; echo -e "\nMaking Guacamole configurtion files...\n" >> $logfile  2>&1
+sleep 1 | echo -e "\nMaking Guacamole configuration files...\n" | pv -qL 25; echo -e "\nMaking Guacamole configuration files...\n" >> $logfile  2>&1
 echo "# Hostname and port of guacamole proxy
 guacd-hostname: ${SERVER_HOSTNAME}
 guacd-port:     ${GUACA_PORT}
@@ -340,7 +340,7 @@ mysql-password: ${DB_PASSWD}
 mysql-default-max-connections-per-user: 0
 mysql-default-max-group-connections-per-user: 0" > /etc/guacamole/${GUACA_CONF}
 
-sleep 1 | echo -e "\nMaking Guacamole simbolic links...\n" | pv -qL 25; echo -e "\nMaking Guacamole simbolic links...\n" >> $logfile  2>&1
+sleep 1 | echo -e "\nMaking Guacamole symbolic links...\n" | pv -qL 25; echo -e "\nMaking Guacamole symbolic links...\n" >> $logfile  2>&1
 ln -vs ${LIB_DIR}guacamole.war /var/lib/tomcat/webapps || exit 1
 ln -vs /etc/guacamole/${GUACA_CONF} /usr/share/tomcat/.guacamole/ || exit 1
 ln -vs ${LIB_DIR}lib/ /usr/share/tomcat/.guacamole/ || exit 1
@@ -367,7 +367,7 @@ fi
 
 mysqladmin -u root password ${MYSQL_PASSWD} || exit 1
 
-sleep 1 | echo -e "\nCreating BD & User for Guacamole...\n" | pv -qL 25; echo -e "\nCreating BD & User for Guacamole...\n" >> $logfile  2>&1
+sleep 1 | echo -e "\nCreating DB & User for Guacamole...\n" | pv -qL 25; echo -e "\nCreating DB & User for Guacamole...\n" >> $logfile  2>&1
 mysql -u root -p${MYSQL_PASSWD} -e "CREATE DATABASE ${DB_NAME};" || exit 1
 mysql -u root -p${MYSQL_PASSWD} -e "GRANT SELECT,INSERT,UPDATE,DELETE ON ${DB_NAME}.* TO '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWD}';" || exit 1
 mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;" || exit 1
@@ -375,7 +375,7 @@ mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;" || exit 1
 sleep 1 | echo -e "\nCreating Guacamole Tables...\n" | pv -qL 25; echo -e "\nCreating Guacamole Tables...\n" >> $logfile  2>&1
 cat extension/mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME}
 
-sleep 1 | echo -e "\nSetting Tomcat Server...\n" | pv -qL 25; echo -e "\nSetting Tomcat Server...\n" >> $logfile  2>&1
+sleep 1 | echo -e "\nSetting up Tomcat Server...\n" | pv -qL 25; echo -e "\nSetting up Tomcat Server...\n" >> $logfile  2>&1
 sed -i '72i URIEncoding="UTF-8"' /etc/tomcat/server.xml
 sed -i '92i <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true" \
                maxThreads="150" scheme="https" secure="true" \
