@@ -66,6 +66,10 @@ White=`tput setaf 7`   #${White}
 Bold=`tput bold`       #${Bold}
 Rev=`tput smso`        #${Rev}
 Reset=`tput sgr0`      #${Reset}
+TOMCAT_HOME="/opt/tomcat"
+TOMCAT_VER="7.0.106"
+TOMCAT_ARC="apache-tomcat-${TOMCAT_VER}"
+TOMCAT_URL="https://downloads.apache.org/tomcat/tomcat-7/v${TOMCAT_VER}/bin/${TOMCAT_ARC}.tar.gz"
 
 #Initialize variables to default values.
 MYSQL_PASSWD="guacamole"
@@ -275,8 +279,64 @@ pv () {
     cat $*
 }
 
+tomcatinstall () {
+sleep 1 | echo -e "\nInstalling Tomcat dependencies..."; echo -e "\nInstalling Tomcat dependencies..." >> $logfile  2>&1
+
+yum install -y wget pv dialog java
+RETVAL=$? ; echo -e "yum install RC is: $RETVAL" >> $logfile  2>&1
+
+sleep 1 | echo -e "\nDownloading Tomcat package for installation...\n" | pv -qL 25; echo -e "\nDownloading Tomcat package for installation...\n" >> $logfile  2>&1
+wget --progress=bar:force ${TOMCAT_URL} -O ${TOMCAT_ARC}.tar.gz 2>&1 | progressfilt
+
+groupadd tomcat
+useradd -M -s /bin/nologin -g tomcat -d ${TOMCAT_HOME} tomcat
+
+sleep 1 | echo -e "\nDecompressing Tomcat package...\n" | pv -qL 25; echo -e "\nDecompressing Tomcat package...\n" >> $logfile  2>&1
+mkdir ${TOMCAT_HOME}
+pv ${TOMCAT_ARC}.tar.gz | tar xzf - -C ${TOMCAT_HOME} --strip-components=1 && rm -f ${TOMCAT_ARC}.tar.gz
+
+cd ${TOMCAT_HOME}
+chgrp -R tomcat ${TOMCAT_HOME}
+chmod -R g+r conf
+chmod g+x conf
+chown -R tomcat webapps/ work/ temp/ logs/
+
+sleep 1 | echo -e "\nInstalling Tomcat systemd service...\n" | pv -qL 25; echo -e "\nInstalling Tomcat systemd service...\n" >> $logfile  2>&1
+echo '# Systemd unit file for tomcat
+[Unit]
+Description=Apache Tomcat Web Application Container
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+# Environment=JAVA_HOME=/usr/lib/jvm/jre
+# Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid
+# Environment=CATALINA_HOME=/opt/tomcat
+# Environment=CATALINA_BASE=/opt/tomcat
+# Environment='CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC'
+# Environment='JAVA_OPTS=-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom'
+
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/bin/kill -15 $MAINPID
+
+User=tomcat
+Group=tomcat
+UMask=0007
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+' > /etc/systemd/system/tomcat.service
+
+systemctl daemon-reload
+systemctl start tomcat
+
+}
+
 guacamoleinstall () {
-sleep 1 | echo -e "\nInstalling Dependencies..."; echo -e "\nInstalling Dependencies..." >> $logfile  2>&1
+sleep 1 | echo -e "\nInstalling Guacamole dependencies..."; echo -e "\nInstalling Guacamole dependencies..." >> $logfile  2>&1
 
 #rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER}
 rpm -qa | grep libjpeg-turbo-${LIBJPEG_VER}
@@ -292,7 +352,7 @@ else
 	ln -vs /opt/libjpeg-turbo/lib??/* /usr/lib${ARCH}/ || exit 1
 fi
 
-yum install -y wget pv dialog gcc cairo-devel libpng-devel libjpeg-turbo-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts ${MySQL_Packages}
+yum install -y wget pv dialog gcc cairo-devel libpng-devel libjpeg-turbo-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel gnu-free-mono-fonts ${MySQL_Packages}
 RETVAL=$? ; echo -e "yum install RC is: $RETVAL" >> $logfile  2>&1
 
 sleep 1 | echo -e "\nCreating Directories...\n" | pv -qL 25; echo -e "\nCreating Directories...\n" >> $logfile  2>&1
@@ -300,7 +360,8 @@ rm -fr ${INSTALL_DIR}
 mkdir -v /etc/guacamole >> $logfile  2>&1
 mkdir -vp ${INSTALL_DIR}{client,selinux} >> $logfile 2>&1 && cd ${INSTALL_DIR}
 mkdir -vp ${LIB_DIR}{extensions,lib} >> $logfile  2>&1
-mkdir -v /usr/share/tomcat/.guacamole/ >> $logfile  2>&1
+#mkdir -v /usr/share/tomcat/.guacamole/ >> $logfile  2>&1
+mkdir -v ${TOMCAT_HOME}/.guacamole/ >> $logfile  2>&1
 
 sleep 1 | echo -e "\nDownloading Guacamole packages for installation...\n" | pv -qL 25; echo -e "\nDownloading Guacamole packages for installation...\n" >> $logfile  2>&1
 wget --progress=bar:force ${GUACA_URL}source/${GUACA_SERVER}.tar.gz -O ${GUACA_SERVER}.tar.gz 2>&1 | progressfilt
@@ -341,6 +402,7 @@ cd ..
 sleep 1 | echo -e "\nCopying Guacamole Client...\n" | pv -qL 25; echo -e "\nCopying Guacamole Client...\n" >> $logfile  2>&1
 cp -v client/guacamole.war ${LIB_DIR}guacamole.war
 #cp -v client/guacamole.war /var/lib/tomcat/webapps/guacamole.war
+cp -v client/guacamole.war ${TOMCAT_HOME}/webapps/guacamole.war
 
 sleep 1 | echo -e "\nMaking Guacamole configuration files...\n" | pv -qL 25; echo -e "\nMaking Guacamole configuration files...\n" >> $logfile  2>&1
 echo "# Hostname and port of guacamole proxy
@@ -357,10 +419,10 @@ mysql-default-max-connections-per-user: 0
 mysql-default-max-group-connections-per-user: 0" > /etc/guacamole/${GUACA_CONF}
 
 sleep 1 | echo -e "\nMaking Guacamole symbolic links...\n" | pv -qL 25; echo -e "\nMaking Guacamole symbolic links...\n" >> $logfile  2>&1
-ln -vs ${LIB_DIR}guacamole.war /var/lib/tomcat/webapps || exit 1
-ln -vs /etc/guacamole/${GUACA_CONF} /usr/share/tomcat/.guacamole/ || exit 1
-ln -vs ${LIB_DIR}lib/ /usr/share/tomcat/.guacamole/ || exit 1
-ln -vs ${LIB_DIR}extensions/ /usr/share/tomcat/.guacamole/ || exit 1
+#ln -vs ${LIB_DIR}guacamole.war /var/lib/tomcat/webapps || exit 1
+ln -vs /etc/guacamole/${GUACA_CONF} ${TOMCAT_HOME}/.guacamole/ || exit 1
+ln -vs ${LIB_DIR}lib/ ${TOMCAT_HOME}/.guacamole/ || exit 1
+ln -vs ${LIB_DIR}extensions/ ${TOMCAT_HOME}/.guacamole/ || exit 1
 ln -vs /usr/local/lib/freerdp/guac* /usr/lib${ARCH}/freerdp || exit 1
 
 sleep 1 | echo -e "\nCopying Guacamole JDBC Extension to Extensions Dir...\n" | pv -qL 25; echo -e "\nCopying Guacamole JDBC Extension to Extensions Dir...\n" >> $logfile  2>&1
@@ -391,15 +453,38 @@ mysql -u root -p${MYSQL_PASSWD} -e "FLUSH PRIVILEGES;" || exit 1
 sleep 1 | echo -e "\nCreating Guacamole Tables...\n" | pv -qL 25; echo -e "\nCreating Guacamole Tables...\n" >> $logfile  2>&1
 cat extension/mysql/schema/*.sql | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME}
 
+# Add a file ready to be renamed, to activate some verbose logging
+echo '<configuration>
+        <!-- Appender for debugging -->
+        <appender name="GUAC-DEBUG" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                </encoder>
+        </appender>
+        <!-- Appender for debugging in a file-->
+        <appender name="GUAC-DEBUG_FILE" class="ch.qos.logback.core.FileAppender">
+                <file>/var/log/guacd.log</file>
+                <encoder>
+                        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                </encoder>
+        </appender>
+        <!-- Log at DEBUG level -->
+        <root level="debug">
+                <appender-ref ref="GUAC-DEBUG"/>
+                <appender-ref ref="GUAC-DEBUG_FILE"/>
+        </root>
+</configuration>
+' > ${TOMCAT_HOME}/.guacamole/logback.xml.temp
+
 sleep 1 | echo -e "\nSetting up Tomcat Server...\n" | pv -qL 25; echo -e "\nSetting up Tomcat Server...\n" >> $logfile  2>&1
-sed -i '72i URIEncoding="UTF-8"' /etc/tomcat/server.xml
+sed -i '72i URIEncoding="UTF-8"' ${TOMCAT_HOME}/conf/server.xml
 sed -i '92i <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true" \
                maxThreads="150" scheme="https" secure="true" \
                clientAuth="false" sslProtocol="TLS" \
-               keystoreFile="/var/lib/tomcat/webapps/.keystore" \
+               keystoreFile="${TOMCAT_HOME}/webapps/.keystore" \
                keystorePass="JKSTORE_PASSWD" \
-               URIEncoding="UTF-8" />' /etc/tomcat/server.xml
-sed -i "s/JKSTORE_PASSWD/${JKSTORE_PASSWD}/g" /etc/tomcat/server.xml
+               URIEncoding="UTF-8" />' ${TOMCAT_HOME}/conf/server.xml
+sed -i "s/JKSTORE_PASSWD/${JKSTORE_PASSWD}/g" ${TOMCAT_HOME}/conf/server.xml
 
 if [ $INSTALL_MODE = "silent" ]; then
 	sleep 1 | echo -e "\nGenerating the Java KeyStore\n" | pv -qL 25; echo -e "\nGenerating the Java KeyStore\n" >> $logfile  2>&1
@@ -407,7 +492,7 @@ if [ $INSTALL_MODE = "silent" ]; then
 else
 	sleep 1 | echo -e "\nPlease complete the Wizard for the Java KeyStore\n" | pv -qL 25; echo -e "\nPlease complete the Wizard for the Java KeyStore\n" >> $logfile  2>&1
 fi
-keytool -genkey -alias Guacamole -keyalg RSA -keystore /var/lib/tomcat/webapps/.keystore -storepass ${JKSTORE_PASSWD} -keypass ${JKSTORE_PASSWD} ${noprompt}
+keytool -genkey -alias Guacamole -keyalg RSA -keystore ${TOMCAT_HOME}/webapps/.keystore -storepass ${JKSTORE_PASSWD} -keypass ${JKSTORE_PASSWD} ${noprompt}
 
 sleep 1 | echo -e "\nSetting Tomcat and Guacamole Service...\n" | pv -qL 25; echo -e "\nSetting Tomcat and Guacamole Service...\n" >> $logfile  2>&1
 
@@ -633,6 +718,7 @@ sleep 1 | echo -e "\nIf you have any suggestions please write to: correo@nacimie
 if [[ $INSTALL_MODE = "interactive"  &&  $INSTALL_MODE != "silent" && $INSTALL_MODE != "proxy" ]] ; then menu; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ] || [ $INSTALL_NGINX = "yes" ]; then epelinstall; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then yumupdate; fi
+if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then tomcatinstall; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ]; then guacamoleinstall; fi
 if [ $INSTALL_NGINX = "yes" ]; then nginxinstall; fi
 if [ $INSTALL_MODE = "interactive" ] || [ $INSTALL_MODE = "silent" ] || [ $INSTALL_NGINX = "yes" ]; then firewallsetting; fi
