@@ -26,7 +26,9 @@
 SCRIPT=`basename ${BASH_SOURCE[0]}` #Script File Name
 GUACA_VER="1.1.0"
 MYSQL_CONNECTOR_VER="5.1.39"
-LIBJPEG_VER="1.4.2"
+# This is upstream version but we may not need it
+#LIBJPEG_VER="1.4.2"
+LIBJPEG_VER="1.2.90"
 SCRIPT_BUILD="5"
 SCRIPT_VERSION="${GUACA_VER} Build ${SCRIPT_BUILD}"
 SERVER_HOSTNAME="localhost"
@@ -290,7 +292,7 @@ else
 	ln -vs /opt/libjpeg-turbo/lib??/* /usr/lib${ARCH}/ || exit 1
 fi
 
-yum install -y wget pv dialog gcc cairo-devel libpng-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts ${MySQL_Packages}
+yum install -y wget pv dialog gcc cairo-devel libpng-devel libjpeg-turbo-devel uuid-devel freerdp-devel freerdp-plugins pango-devel libssh2-devel libtelnet-devel libvncserver-devel pulseaudio-libs-devel openssl-devel libvorbis-devel libwebp-devel tomcat gnu-free-mono-fonts ${MySQL_Packages}
 RETVAL=$? ; echo -e "yum install RC is: $RETVAL" >> $logfile  2>&1
 
 sleep 1 | echo -e "\nCreating Directories...\n" | pv -qL 25; echo -e "\nCreating Directories...\n" >> $logfile  2>&1
