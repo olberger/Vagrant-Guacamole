@@ -25,7 +25,7 @@
 ##########################
 SCRIPT=`basename ${BASH_SOURCE[0]}` #Script File Name
 GUACA_VER="1.2.0"
-MYSQL_CONNECTOR_VER="5.1.39"
+MARIADB_CONNECTOR_VER="2.7.0"
 # This is upstream version but we may not need it
 #LIBJPEG_VER="1.4.2"
 LIBJPEG_VER="1.2.90"
@@ -38,8 +38,8 @@ PWD=`pwd`
 filename="${PWD}/guacamole-${GUACA_VER}."$(date +"%d-%y-%b")""
 logfile="${filename}.log"
 fwbkpfile="${filename}.firewall.bkp"
-MYSQ_CONNECTOR_URL="http://dev.mysql.com/get/Downloads/Connector-J/"
-MYSQL_CONNECTOR="mysql-connector-java-${MYSQL_CONNECTOR_VER}"
+MARIADB_CONNECTOR_URL="https://downloads.mariadb.com/Connectors/java/connector-java-${MARIADB_CONNECTOR_VER}"
+MARIADB_CONNECTOR="mariadb-java-client-${MARIADB_CONNECTOR_VER}"
 MYSQL_PORT="3306"
 GUACA_PORT="4822"
 GUACA_CONF="guacamole.properties"
@@ -368,7 +368,7 @@ wget --progress=bar:force ${GUACA_URL}source/${GUACA_SERVER}.tar.gz -O ${GUACA_S
 #wget --progress=bar:force ${GUACA_URL}source/${GUACA_CLIENT}.tar.gz 2>&1 | progressfilt
 wget --progress=bar:force ${GUACA_URL}binary/${GUACA_CLIENT}.war -O ${INSTALL_DIR}client/guacamole.war 2>&1 | progressfilt
 wget --progress=bar:force ${GUACA_URL}binary/${GUACA_JDBC}.tar.gz -O ${GUACA_JDBC}.tar.gz 2>&1 | progressfilt
-wget --progress=bar:force ${MYSQ_CONNECTOR_URL}${MYSQL_CONNECTOR}.tar.gz 2>&1 | progressfilt
+wget --progress=bar:force ${MARIADB_CONNECTOR_URL}/${MARIADB_CONNECTOR}.jar 2>&1 | progressfilt
 
 sleep 1 | echo -e "\nDecompressing Guacamole Server Source...\n" | pv -qL 25; echo -e "\nDecompressing Guacamole Server Source...\n" >> $logfile  2>&1
 pv ${GUACA_SERVER}.tar.gz | tar xzf - && rm -f ${GUACA_SERVER}.tar.gz
@@ -382,8 +382,8 @@ sleep 1 | echo -e "\nDecrompressing Guacamole JDBC Extension...\n" | pv -qL 25; 
 pv ${GUACA_JDBC}.tar.gz | tar xzf - && rm -f ${GUACA_JDBC}.tar.gz
 mv ${GUACA_JDBC} extension
 
-sleep 1 | echo -e "\nDecompressing MySQL Connector...\n" | pv -qL 25; echo -e "\nDecompressing MySQL Connector...\n" >> $logfile  2>&1
-pv ${MYSQL_CONNECTOR}.tar.gz | tar xzf - && rm -f ${MYSQL_CONNECTOR}.tar.gz
+# sleep 1 | echo -e "\nDecompressing MySQL Connector...\n" | pv -qL 25; echo -e "\nDecompressing MySQL Connector...\n" >> $logfile  2>&1
+# pv ${MARIADB_CONNECTOR}.tar.gz | tar xzf - && rm -f ${MARIADB_CONNECTOR}.tar.gz
 
 sleep 1 | echo -e "\nCompiling Guacamole Server...\n" | pv -qL 25; echo -e "\nCompiling Guacamole Server...\n" >> $logfile  2>&1
 cd server
@@ -410,6 +410,7 @@ guacd-hostname: ${SERVER_HOSTNAME}
 guacd-port:     ${GUACA_PORT}
 
 # MySQL properties
+mysql-driver: mariadb
 mysql-hostname: ${SERVER_HOSTNAME}
 mysql-port: ${MYSQL_PORT}
 mysql-database: ${DB_NAME}
@@ -428,8 +429,9 @@ ln -vs /usr/local/lib/freerdp/guac* /usr/lib${ARCH}/freerdp || exit 1
 sleep 1 | echo -e "\nCopying Guacamole JDBC Extension to Extensions Dir...\n" | pv -qL 25; echo -e "\nCopying Guacamole JDBC Extension to Extensions Dir...\n" >> $logfile  2>&1
 cp -v extension/mysql/guacamole-auth-jdbc-mysql-${GUACA_VER}.jar ${LIB_DIR}extensions/ || exit 1
 
-sleep 1 | echo -e "\nCopying MySQL Connector to Lib Dir...\n" | pv -qL 25; echo -e "\nCopying MySQL Connector to Lib Dir...\n" >> $logfile  2>&1
-cp -v mysql-connector-java-${MYSQL_CONNECTOR_VER}/mysql-connector-java-${MYSQL_CONNECTOR_VER}-bin.jar ${LIB_DIR}/lib/ || exit 1
+sleep 1 | echo -e "\nCopying MariaDB Connector to Lib Dir...\n" | pv -qL 25; echo -e "\nCopying MariaDB Connector to Lib Dir...\n" >> $logfile  2>&1
+#cp -v mysql-connector-java-${MARIADB_CONNECTOR_VER}/mysql-connector-java-${MARIADB_CONNECTOR_VER}-bin.jar ${LIB_DIR}/lib/ || exit 1
+cp -v ${MARIADB_CONNECTOR}.jar ${LIB_DIR}/lib/ || exit 1
 
 if [ $CENTOS_VER -ge 7 ]; then
 	sleep 1 | echo -e "\nSetting MariaDB Service...\n" | pv -qL 25; echo -e "\nSetting MariaDB Service...\n" >> $logfile  2>&1
