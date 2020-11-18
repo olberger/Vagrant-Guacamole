@@ -1,6 +1,6 @@
 #!/bin/bash
 ##############################################################
-# This script was created by Hernan Dario Nacimiento based on:
+# This script was initially created by Hernan Dario Nacimiento based on:
 #  http://guac-dev.org/release/release-notes-0-9-9
 #  http://guac-dev.org/doc/0.9.9/gug/jdbc-auth.html
 #  http://guac-dev.org/doc/0.9.9/gug/administration.html
@@ -24,7 +24,7 @@
 #####    VARIABLES    ####
 ##########################
 SCRIPT=`basename ${BASH_SOURCE[0]}` #Script File Name
-GUACA_VER="1.1.0"
+GUACA_VER="1.2.0"
 MYSQL_CONNECTOR_VER="5.1.39"
 # This is upstream version but we may not need it
 #LIBJPEG_VER="1.4.2"
