@@ -260,10 +260,24 @@ sleep 1 | echo -e "\nUpdating CentOS...\n"; echo -e "\nUpdating CentOS...\n" >> 
 yum update -y
 }
 
+pv () {
+    while getopts qL: FLAG; do
+        case $FLAG in
+            *)
+                ;;
+        esac
+    done
+
+    shift $((OPTIND-1))
+    
+    cat $*
+}
+
 guacamoleinstall () {
 sleep 1 | echo -e "\nInstalling Dependencies..."; echo -e "\nInstalling Dependencies..." >> $logfile  2>&1
 
-rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER}
+#rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER}
+rpm -qa | grep libjpeg-turbo-${LIBJPEG_VER}
 RETVAL=$? ; echo -e "rpm -qa | grep libjpeg-turbo-official-${LIBJPEG_VER} RC is: $RETVAL" >> $logfile  2>&1
 
 if [ $RETVAL -eq 0 ]; then
