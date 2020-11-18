@@ -1,45 +1,41 @@
-# -*- mode: ruby -*-
- 
-# vi: set ft=ruby :
- 
-hosts = {
- 
-
-  
-    "GuacamoleVM" => "192.168.88.100",
-
-
- 
-}
- 
 Vagrant.configure("2") do |config|
- 
-    config.vm.box = "bento/centos-7.1"
-#   config.ssh.insert_key = false
-#   config.ssh.private_key_path = ["id_rsa",  "~/.vagrant.d/insecure_private_key"]
-#	config.vm.provision "file", source: "id_rsa.pub", destination: "~/.ssh/authorized_keys"
-	config.vm.provision :shell, path: "Provision-script.sh" 
-	
-		hosts.each do |name, ip|
- 
-		config.vm.define name do |machine|
-	 
-			machine.vm.network :private_network, ip: ip
-	 
-			machine.vm.provider "virtualbox" do |v|
-	 
-				v.name = name
-				v.customize [
-					"modifyvm", :id,
-					"--memory", "1024",
-					"--cpus", "1"
-				]
-			end
-			machine.vm.hostname = name
-		end
-     
-	end
+
+  # Workaround the vbguest error on unmounting /mnt
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false
+  end
+
+  config.vm.define "server" do |server|
+
+    server.vm.hostname = "server"
     
+    server.vm.box = "centos/7"
+
+    server.vm.provider "virtualbox" do |v|
+      v.customize [
+         "modifyvm", :id,
+         "--memory", "1024",
+         "--cpus", "1"
+      ]
+    end
+    
+    server.vm.boot_timeout = 600
+
+    server.vm.network :private_network, ip: "10.0.0.10"
+    
+    server.vm.network "forwarded_port", guest: 8080, host: 8080
+    server.vm.network "forwarded_port", guest: 8443, host: 8443
+
+    server.vm.provision "file", source: "Provision-script.sh", destination: "$HOME/Provision-script.sh"
+
+    server.vm.provision "shell", inline: <<-SHELL
+      chmod +x /home/vagrant/Provision-script.sh
+      /home/vagrant/Provision-script.sh
+    SHELL
+
+  end
+
 end
 
-
+# -*- mode: ruby -*-
+# vi: set ft=ruby :

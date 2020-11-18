@@ -37,3 +37,15 @@ Vagrantfile: Uses "bento/centos-7.1" Vagrant Box to set up a Centos 7 Server wit
          Generates a Self-Signed Certificate for SSL Support
          Configure SELinux for Nginx Proxy
          Configure FirewallD or iptables
+
+    * Diagnosis and other details :
+      The installation script displays a lot of messages during the VM
+      provisionning, which should conclude with something like this:
+   
+       Your firewall backup file /home/vagrant/guacamole-1.1.0.18-20-Nov.firewall.bkp
+       To manage the Guacamole GW go to http://<IP>:8080/guacamole/ or https://<IP>:8443/guacamole/
+
+       The username and password is: guacadmin
+
+      You can then test http://localhost:8080/guacamole/
+      
