@@ -13,11 +13,15 @@ Vagrantfile: Uses "bento/centos-7.1" Vagrant Box to set up a Centos 7 Server wit
 - User/Password=vagrant/vagrant
 - ssh key managed by vagrant ( to manage ssh keys uncomment the section (ssh key management) and change the path to your own key)
 - Provisionning script (Provision-script.sh):
-    * Based on the following script http://pilotfiber.dl.sourceforge.net/project/guacamoleinstallscript/CentOS/guacamole-install-script.sh
-    * Description : https://sourceforge.net/projects/guacamoleinstallscript/
+    * Based on the following script
+      http://pilotfiber.dl.sourceforge.net/project/guacamoleinstallscript/CentOS/guacamole-install-script.sh
+      by Hernan Dario Nacimiento
+    * Description : (borrowed originally from
+         https://sourceforge.net/projects/guacamoleinstallscript/ )
+
          The script installs dependencies and configure the OS automatically for you in order to obtain the best Remote Desktop Gateway!
 
-         This Install Script works in a clean CentOS 6/7 installation and install Guacamole 0.9.9 version for a local users 
+         This Install Script works in a clean CentOS 7 installation and installs Guacamole 1.1.0 version for a local users 
          authentication.
 
          Task of this script:
