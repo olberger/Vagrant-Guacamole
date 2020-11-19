@@ -1,7 +1,13 @@
 # vagrant-guacamole
-Set up a Jump Point server (RDP, VNC, SSH, Telnet) with web Interface (clientless remote access).
 
-Vagrantfile and script to set up a CentOS 7.1 VM on Virtualbox and provision it with guacamole 1.1.0
+This Vagrant setup is used to test Guacamole with a Linux Desktop.
+
+= Server =
+
+It starts a 'server' VM, which includes de Guacamole server, with
+support for its supported protocols (RDP, VNC, SSH, Telnet) together
+with its web Interface (clientless remote access). 
+It runs a CentOS 7 VM on Virtualbox, provisionned with guacamole 1.2.0
 
 Vagrantfile: Uses "bento/centos-7.1" Vagrant Box to set up a Centos 7 Server with :
 
@@ -48,4 +54,15 @@ Vagrantfile: Uses "bento/centos-7.1" Vagrant Box to set up a Centos 7 Server wit
        The username and password is: guacadmin
 
       You can then test http://localhost:8080/guacamole/
+
+      vagrant ssh server, then 
+      sudo journalctl -f -u guacd
       
+= Desktop machine =
+
+It also starts a 'desktop' Linux desktop system, to which Guacamole
+can connect through RDP
+It runs a Centos 8 desktop with XFCE, using xrdp + xorgxrdp.
+The test user is 'testuser'/'testuser'
+
+
