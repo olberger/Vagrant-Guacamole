@@ -496,6 +496,27 @@ else
 fi
 keytool -genkey -alias Guacamole -keyalg RSA -keystore ${TOMCAT_HOME}/webapps/.keystore -storepass ${JKSTORE_PASSWD} -keypass ${JKSTORE_PASSWD} ${noprompt}
 
+sleep 1 | echo -e "\nSetting Guacd Service...\n" | pv -qL 25; echo -e "\nSetting Guacd Service...\n" >> $logfile  2>&1
+
+# Set logging level to debug to help diagnose connection issues
+echo '#
+# guacd configuration file
+#
+
+[daemon]
+log_level = debug
+' > /etc/guacamole/guacd.conf
+
+sleep 1 | echo -e "\nPopulating Guacamole connections database...\n" | pv -qL 25; echo -e "\nSetting Guacamole connections database...\n" >> $logfile  2>&1
+
+echo "
+INSERT INTO guacamole_connection (connection_name, protocol) VALUES ('desktop', 'rdp');
+
+INSERT INTO guacamole_connection_parameter VALUES (1, 'hostname', '10.0.0.20');
+INSERT INTO guacamole_connection_parameter VALUES (1, 'ignore-cert', 'true');
+
+" | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME}
+
 sleep 1 | echo -e "\nSetting Tomcat and Guacamole Service...\n" | pv -qL 25; echo -e "\nSetting Tomcat and Guacamole Service...\n" >> $logfile  2>&1
 
 if [ $CENTOS_VER -ge 7 ]; then

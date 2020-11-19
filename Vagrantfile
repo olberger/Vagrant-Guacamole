@@ -33,8 +33,81 @@ Vagrant.configure("2") do |config|
       /home/vagrant/Provision-script.sh
     SHELL
 
+  config.vm.define "desktop" do |desktop|
+
+    desktop.vm.hostname = "desktop"
+    
+    # desktop.vm.box = "nitindas/centos-8.0"
+    # desktop.vm.box_version = "0.1905-1579100378"
+    desktop.vm.box = "bento/centos-8"
+
+    desktop.vm.network :private_network, ip: "10.0.0.20"
+
+    desktop.vm.synced_folder '.', '/vagrant', type: "rsync"
+    
+    desktop.vm.boot_timeout = 600
+    desktop.vm.provider "virtualbox" do |vb|
+      # Display the VirtualBox GUI when booting the machine
+      #vb.gui = true
+      # Customize Name of VM:
+      #      vb.name = "centos-7.5.1804-1549879089-x86-64"
+      # Customize the amount of memory on the VM:
+      vb.memory = "4096"
+      # Customize video memory
+      vb.customize ["modifyvm", :id, "--vram", "32"]
+      # Enable 3D acceleration:
+      # vb.customize ["modifyvm", :id, "--accelerate3d", "on"]
+      # Shared Clipboard
+      #vb.customize ['modifyvm', :id, '--clipboard', 'bidirectional']
+      # Enable Drag and Drop
+      #vb.customize ["modifyvm", :id, "--draganddrop", "bidirectional"]
+      # Enable Remote Display
+      #      vb.customize ["modifyvm", :id, "--vrde", "on"]
+      #      vb.customize ["modifyvm", :id, "--vrdeport", "5000,5010-5012"]
+    end
+
+    # Upgrade and reboot
+   #  # Running Provisioners Always
+   #  desktop.vm.provision "shell", run: "always" do |s|
+   #    #    s.inline = "sudo yum-complete-transaction --cleanup-only && sudo yum -y update"
+   #    s.inline = "sudo yum -y update"
+   #  end
+    desktop.vm.provision "shell", run: "always", inline: <<-SHELL
+        yum -y update
+        yum install -y epel-release
+        # Yum upgrade
+        yum -y upgrade
+    SHELL
+    desktop.vm.provision :reload
+    
+    desktop.vm.provision "shell", run: "always", inline: <<-SHELL
+
+        yum groupinstall "Xfce" -y
+      
+      adduser testuser
+      echo testuser:testuser | chpasswd testuser
+
+      echo '#!/bin/bash
+      startxfce4
+      ' > /home/testuser/startwm.sh
+      chown testuser:testuser /home/testuser/startwm.sh
+      chmod +x /home/testuser/startwm.sh
+
+      yum install -y xrdp
+      yum install -y xorgxrdp
+
+       echo 'allowed_users = anybody
+       ' > /etc/X11/Xwrapper.config
+
+       systemctl enable xrdp
+       systemctl start xrdp
+
+   SHELL
+    
   end
 
+  end
+  
 end
 
 # -*- mode: ruby -*-
