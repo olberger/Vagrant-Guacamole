@@ -515,6 +515,7 @@ INSERT INTO guacamole_connection (connection_name, protocol) VALUES ('desktop', 
 INSERT INTO guacamole_connection_parameter VALUES (1, 'hostname', '10.0.0.20');
 INSERT INTO guacamole_connection_parameter VALUES (1, 'ignore-cert', 'true');
 
+INSERT INTO guacamole_connection_parameter VALUES (1, 'server-layout', 'fr-fr-azerty');
 " | mysql -u root -p${MYSQL_PASSWD} -D ${DB_NAME}
 
 sleep 1 | echo -e "\nSetting Tomcat and Guacamole Service...\n" | pv -qL 25; echo -e "\nSetting Tomcat and Guacamole Service...\n" >> $logfile  2>&1

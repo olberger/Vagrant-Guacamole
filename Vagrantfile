@@ -89,6 +89,15 @@ Vagrant.configure("2") do |config|
       /home/vagrant/Provision-script.sh
     SHELL
     
+
+    # Running Provisioners Always
+    desktop.vm.provision "shell", run: "always", inline: <<-SHELL
+
+      sudo yum -y install glibc-langpack-fr
+      sudo yum -y install langpacks-fr
+
+    localectl set-locale LANG=fr_FR.utf8
+   SHELL
   end
 
 end
