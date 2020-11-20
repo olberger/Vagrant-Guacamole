@@ -1,0 +1,109 @@
+#+TITLE: Vagrant-Guacamole
+#+SUBTITLE: Vagrantfile and scripts to set up a Guacamole server (CentOS 7.1) VM on Virtualbox, and a test Centos 8 desktop with XFCE to connect to using RDP (xrdp + xorgxrdp) 
+
+This Vagrant setup is aimed at testing Guacamole with a Linux Desktop.
+* =server= VM
+
+It starts a 'server' VM, which includes de Guacamole server, with
+support for its supported protocols (RDP, VNC, SSH, Telnet) together
+with its web Interface (clientless remote access). 
+It runs a CentOS 7 VM on Virtualbox, provisionned with guacamole 1.2.0
+** Connecting to Guacamole
+
+The installation script displays a lot of messages during the VM provisionning, which should conclude with something like this:
+   
+#+BEGIN_EXAMPLE
+     Your firewall backup file /home/vagrant/guacamole-1.1.0.18-20-Nov.firewall.bkp
+
+     To manage the Guacamole GW go to http://<IP>:8080/guacamole/ or https://<IP>:8443/guacamole/
+
+     The username and password is: guacadmin
+#+END_EXAMPLE
+
+You can then test connecting to the Guacamole Web interface on
+http://localhost:8080/guacamole/ using the =guacadmin= / =guacadmin=
+login/passwd.
+
+Then, the =desktop= connection should be ready to be used, to connect to
+the desktop of the Desktop VM.
+    
+** VM details
+Vagrantfile: Uses "bento/centos-7.1" Vagrant Box to set up a Centos 7 Server with :
+
+- 10246 MB RAM
+- 1 CPU
+- 1 NAT adapter
+- 1 Host only adapter with IP address = "192.168.88.100"
+- Hostname="GuacamoleVM"
+- User/Password=vagrant/vagrant
+- ssh key managed by vagrant ( to manage ssh keys uncomment the
+  section (ssh key management) and change the path to your own key)
+
+** Provisionning script (=provision-server.sh=):
+
+*** History
+Based on the following script:
+    http://pilotfiber.dl.sourceforge.net/project/guacamoleinstallscript/CentOS/guacamole-install-script.sh by Hernan Dario Nacimiento
+
+Description : (borrowed originally from https://sourceforge.net/projects/guacamoleinstallscript/)
+
+The script installs dependencies and configure the OS automatically for you in order to obtain the best Remote Desktop Gateway!
+
+This Install Script works in a clean CentOS 7 installation and installs Guacamole 1.1.0 version for a local users 
+authentication.
+
+Task of this script:
+       - Install Packages Dependencies
+       - Download Guacamole and MySQL Connector packages
+       - Install Guacamole Server
+       - Install Guacamole Client
+       - Install MySQL Connector
+       - Configure MariaDB or MySQL
+       - Setting Tomcat Server
+       - Generates a Java KeyStore for SSL Support
+       - Install and Setting Nginx Proxy (SPDY enabled)
+       - Generates a Self-Signed Certificate for SSL Support
+       - Configure SELinux for Nginx Proxy
+       - Configure FirewallD or iptables
+
+*** Current details
+- Installs Tomcat from upstream binary distribution into =/opt/tomcat=
+  (I used to have problems with the RPM installation... hadn't time to
+  investigate the details)
+- Installs the MariaDB JDBC connector instead of the original MySQL one.
+- ...
+
+** Diagnosis and other details
+
+Use =vagrant ssh server= to connect to the Guacamole server VM, and use
+=sudo su -= to gain root access.
+
+*** Guacamole Web app issues
+
+Guacamole is deployed by tomcat, so look for configuration files into
+=/opt/tomcat/.guacamole/=
+
+Logs are available inside =/opt/tomcat/logs/=.
+
+For increasing debugging logs, you can do the following :
+#+BEGIN_SRC sh
+cd /opt/tomcat/.guacamole/
+mv logback.xml.temp logback.xml
+systemctl restart tomcat
+#+END_SRC
+
+*** Guacd issues
+
+Whenever you need to investigate guacd issues, you may use =sudo journalctl -f -u guacd=.
+      
+
+* =desktop= VM
+
+The Vagrant setup also starts a =desktop= Linux desktop system, to which Guacamole
+can connect through RDP.
+
+It runs a Centos 8 desktop with XFCE, using xrdp + xorgxrdp.
+
+The test user is =testuser= / =testuser=
+
+
