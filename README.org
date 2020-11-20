@@ -25,7 +25,7 @@ http://localhost:8080/guacamole/ using the =guacadmin= / =guacadmin=
 login/passwd.
 
 Then, the =desktop= connection should be ready to be used, to connect to
-the desktop of the Desktop VM.
+the desktop of the Desktop VM. See below for the test user's credentials.
     
 ** VM details
 Vagrantfile: Uses "bento/centos-7.1" Vagrant Box to set up a Centos 7 Server with :
@@ -104,6 +104,19 @@ can connect through RDP.
 
 It runs a Centos 8 desktop with XFCE, using xrdp + xorgxrdp.
 
-The test user is =testuser= / =testuser=
+The test user is =testuser= / =testuser=.
+
+The test user session is started with the =$HOME/startwm.sh= script,
+which honors the default locale (if set. By default, none).
+
+** Details
+
+It seems that the VirtualBox extensions shouldn't be used for this VM,
+as I've previously experienced X connection issues in previous setups,
+where the X session would be displayed through RDP, but the mouse and
+keyboard weren't active. I suspect this may be related with the fact
+that in addition of xorgxrdp, the vbox extensions were also active.
+
+Beware to vagrant-vbguest messing with this.
 
 
