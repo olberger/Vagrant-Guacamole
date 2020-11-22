@@ -46,7 +46,10 @@ fi
 #test -x /etc/X11/Xsession && exec /etc/X11/Xsession
 #exec /bin/sh /etc/X11/Xsession
 exec /bin/sh /usr/bin/startxfce4
-' > /home/testuser/startwm.sh
+' > /home/testuser/startwm.sh.test
+
+echo "PREFERRED=xfce4-session
+" > /etc/sysconfig/desktop
 
 chown testuser:testuser /home/testuser/startwm.sh
 chmod +x /home/testuser/startwm.sh
